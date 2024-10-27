@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
+using ClientPlugin.Patches;
 using HarmonyLib;
+using VRage.FileSystem;
 using VRage.Plugins;
 
 namespace ClientPlugin
@@ -8,8 +11,10 @@ namespace ClientPlugin
     // ReSharper disable once UnusedType.Global
     public class Plugin : IPlugin, IDisposable
     {
-        public const string Name = "PluginTemplate";
+        public const string Name = "DotNetDump";
         public static Plugin Instance { get; private set; }
+        public static int Ticks { get; private set; }
+        public static string DataDir => Path.Combine(MyFileSystem.UserDataPath, Name);
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public void Init(object gameInstance)
@@ -19,6 +24,10 @@ namespace ClientPlugin
             // TODO: Put your one time initialization code here.
             Harmony harmony = new Harmony(Name);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            Directory.CreateDirectory(DataDir);
+
+            DumpReplicationTables.Init();
         }
 
         public void Dispose()
@@ -31,7 +40,9 @@ namespace ClientPlugin
 
         public void Update()
         {
-            // TODO: Put your update code here. It is called on every simulation frame!
+            DumpReplicationTables.Update(Ticks);
+            
+            Ticks++;
         }
 
         // TODO: Uncomment and use this method to create a plugin configuration dialog
